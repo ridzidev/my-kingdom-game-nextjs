@@ -66,7 +66,7 @@ export default function InfoPanel({
         <div className={styles.kingdomDetails}>
           <h3>{selectedKingdom.name}</h3>
           <p><strong>Ruler:</strong> {selectedKingdom.ruler}</p>
-          <p><strong>Ruler's Age:</strong> {selectedKingdom.age} years</p>
+          <p><strong>Ruler&apos;s Age:</strong> {selectedKingdom.age} years</p>
           <p><strong>Founded:</strong> Year {selectedKingdom.foundingYear}</p>
           <p><strong>Population:</strong> {formatNumber(selectedKingdom.population)}</p>
           <p><strong>Military Strength:</strong> {formatNumber(selectedKingdom.militaryStrength)}</p>

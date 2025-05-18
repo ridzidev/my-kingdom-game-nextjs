@@ -1,7 +1,7 @@
 // src/components/GlobeViewDialog.tsx
 'use client';
 
-import React, { useEffect, useRef, Suspense, useState } from 'react'; // Hapus useMemo jika tidak dipakai
+import React, { useEffect, useRef, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
