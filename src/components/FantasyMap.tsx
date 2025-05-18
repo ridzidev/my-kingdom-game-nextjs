@@ -104,8 +104,8 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
         }
         if (editableModule.default) {
             // L.Map.addInitHook is a valid way to initialize leaflet-editable
-            (L.Map as any).addInitHook(function(this: EditableMap) {
-                // @ts-ignore: leaflet-editable might not be perfectly typed for this dynamic assignment
+            (L.Map as { addInitHook: (hook: (this: EditableMap) => void) => void }).addInitHook(function(this: EditableMap) {
+                // @ts-expect-error: leaflet-editable might not be perfectly typed for this dynamic assignment
                 this.editTools = new editableModule.default(this);
             });
         }
