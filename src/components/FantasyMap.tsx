@@ -33,7 +33,6 @@ interface EditablePolygon extends LeafletPolygon {
     stopDrawing: () => void;
     revertLayers: () => void;
   };
-  // options should extend Leaflet's PathOptions and add custom properties
   options: PathOptions & {
     id_kingdom?: string;
     world_offset?: number;

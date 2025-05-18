@@ -295,8 +295,7 @@ export default function HomePage() {
           <form onSubmit={(e) => { e.preventDefault(); handleSaveEditDetails(); }}>
             <div className={styles.formGroup}><label htmlFor="name">Name:</label><input type="text" id="name" name="name" value={currentFormData.name} onChange={handleEditFormChange} required /></div>
             <div className={styles.formGroup}><label htmlFor="ruler">Ruler:</label><input type="text" id="ruler" name="ruler" value={currentFormData.ruler} onChange={handleEditFormChange} required /></div>
-            {/* Escaped apostrophe in Ruler's Age */}
-            <div className={styles.formGroup}><label htmlFor="age">Ruler's Age:</label><input type="number" id="age" name="age" value={currentFormData.age} onChange={handleEditFormChange} required /></div>
+            <div className={styles.formGroup}><label htmlFor="age">Ruler&apos;s Age:</label><input type="number" id="age" name="age" value={currentFormData.age} onChange={handleEditFormChange} required /></div>
             <div className={styles.formGroup}><label htmlFor="foundingYear">Founding Year:</label><input type="number" id="foundingYear" name="foundingYear" value={currentFormData.foundingYear} onChange={handleEditFormChange} required /></div>
             <div className={styles.formGroup}><label htmlFor="population">Population:</label><input type="number" id="population" name="population" value={currentFormData.population} onChange={handleEditFormChange} /></div>
             <div className={styles.formGroup}><label htmlFor="militaryStrength">Military Strength:</label><input type="number" id="militaryStrength" name="militaryStrength" value={currentFormData.militaryStrength} onChange={handleEditFormChange} /></div>
