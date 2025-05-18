@@ -16,11 +16,31 @@ import type {
   LeafletMouseEvent,
   Polygon as LeafletPolygon,
   LayerGroup as LeafletLayerGroup,
-  LatLngBounds as LeafletLatLngBounds,
-  Layer as LeafletLayer
+  LatLngBounds as LeafletLatLngBounds
 } from 'leaflet';
 
 let L: typeof import('leaflet') | null = null;
+
+interface EditablePolygon extends LeafletPolygon {
+  editTools: {
+    enable: () => void;
+    disable: () => void;
+    isEnabled: () => boolean;
+    stopDrawing: () => void;
+    revertLayers: () => void;
+  };
+}
+
+interface EditableMap extends LeafletMapType {
+  editTools: {
+    startPolygon: (layer: LeafletPolygon) => void;
+    startEdit: (layer: LeafletPolygon) => void;
+    stopDrawing: () => void;
+    revertLayers: () => void;
+    disable: () => void;
+    isEnabled: () => boolean;
+  };
+}
 
 export interface FantasyMapHandle {
   getEditedTerritoryData: () => LatLngExpression[][] | null;
@@ -54,13 +74,13 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
   isEditingTerritoryMode,
   kingdomBeingEditedId,
 }, ref) => {
-  const mapRef = useRef<any | null>(null);
+  const mapRef = useRef<EditableMap | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [librariesLoaded, setLibrariesLoaded] = useState(false);
   const legendRef = useRef<HTMLDivElement | null>(null);
   const kingdomLayersRef = useRef<LeafletLayerGroup | null>(null);
   const individualKingdomMainLayersRef = useRef<Record<string, LeafletPolygon[]>>({});
-  const editableLayersRef = useRef<any[]>([]);
+  const editableLayersRef = useRef<EditablePolygon[]>([]);
   const editingWorldOffsetRef = useRef<number>(0);
 
   useEffect(() => {

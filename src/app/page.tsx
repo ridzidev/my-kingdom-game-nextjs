@@ -32,7 +32,6 @@ const MAP_CRS_WIDTH_UNITS = 2000;
 const MAP_CRS_HEIGHT_UNITS = 1000;
 const KM_PER_MAP_UNIT_LENGTH = 5;
 const SQKM_PER_MAP_UNIT_AREA = KM_PER_MAP_UNIT_LENGTH * KM_PER_MAP_UNIT_LENGTH;
-const PETADASAR_IMAGE_ACTUAL_WIDTH_PX = 2000; // SESUAIKAN INI DENGAN LEBAR ASLI petadasar.png
 
 type EditableKingdomFields = Omit<Kingdom, 'id' | 'territoryPolygons' | 'color'>;
 
@@ -62,7 +61,7 @@ export default function HomePage() {
         if (Array.isArray(parsedData) && parsedData.every(item => typeof item === 'object' && item !== null && 'id' in item && 'name' in item)) {
           setKingdoms(parsedData as Kingdom[]);
         } else { localStorage.removeItem(KINGDOMS_STORAGE_KEY); }
-      } catch (error) { localStorage.removeItem(KINGDOMS_STORAGE_KEY); }
+      } catch { localStorage.removeItem(KINGDOMS_STORAGE_KEY); }
     }
   }, []);
 
@@ -225,15 +224,11 @@ export default function HomePage() {
   };
 
   const handleDeleteKingdom = (kingdomIdToDelete: string) => {
-    if (isEditingDetails || isEditingTerritory) { alert("Finish editing first."); return; }
-    setKingdoms(prevKingdoms => prevKingdoms.filter(k => k.id !== kingdomIdToDelete));
-    if (selectedKingdom && selectedKingdom.id === kingdomIdToDelete) {
-      setSelectedKingdom(null); setSelectedMapFeature(null); setKingdomToFocus(null);
-    }
-    if (kingdoms.length === 1 && kingdoms[0].id === kingdomIdToDelete) { // Jika ini adalah kingdom terakhir
-        setSelectedMapFeature(null); setKingdomToFocus(null);
-    }
-    if (editingKingdomId === kingdomIdToDelete) handleCancelAllEdits();
+    if (isEditingDetails || isEditingTerritory) { alert("Please finish or cancel editing."); return; }
+    const { id, territoryPolygons, color, ...kingdomData } = kingdoms.find(k => k.id === kingdomIdToDelete) || {};
+    setKingdoms(kingdoms.filter(k => k.id !== kingdomIdToDelete));
+    setSelectedKingdom(null);
+    setSelectedMapFeature(null);
   };
 
   const handleStartEditDetails = (kingdomId: string) => {
@@ -381,11 +376,16 @@ export default function HomePage() {
   };
   
   const handleCancelAllEdits = (isSwitchingMode = false) => {
+    if (!isSwitchingMode) {
+      alert("Please finish or cancel editing first.");
+      return;
+    }
     if (isEditingTerritory && fantasyMapRef.current) {
         fantasyMapRef.current.cancelInternalTerritoryEdit();
     }
     setEditingKingdomId(null);
-    setIsEditingDetails(false); setIsEditingTerritory(false);
+    setIsEditingDetails(false);
+    setIsEditingTerritory(false);
     setEditFormData({});
   };
 
