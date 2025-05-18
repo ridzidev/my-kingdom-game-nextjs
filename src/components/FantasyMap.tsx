@@ -29,6 +29,10 @@ interface EditablePolygon extends LeafletPolygon {
     stopDrawing: () => void;
     revertLayers: () => void;
   };
+  options: {
+    id_kingdom?: string;
+    world_offset?: number;
+  };
 }
 
 interface EditableMap extends LeafletMapType {
@@ -96,7 +100,7 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
         }
         // Initialize Leaflet.Editable
         if (editableModule.default) {
-            L.Map.addInitHook(function(this: any) {
+            L.Map.addInitHook(function(this: EditableMap) {
                 this.editTools = new editableModule.default(this);
             });
         }
@@ -114,7 +118,7 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
       const map = L_.map(mapContainerRef.current, {
         crs: L_.CRS.Simple,
         zoomControl: false
-      }) as any;
+      }) as EditableMap;
       mapRef.current = map;
 
       const imageUrl = '/maps/petadasar.png';
@@ -357,7 +361,7 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
   }));
 
   const getTerritoryDataFromLeafletLayer = (
-    layer: any,
+    layer: EditablePolygon,
     worldOffset: number,
     currentMapWidthUnits: number
   ): LatLngExpression[][] | null => {
@@ -365,7 +369,7 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
     const latlngsFromLayer = layer.getLatLngs();
     const newTerritoriesLeafletFormat: LatLngExpression[][] = [];
 
-    const parseAndWrapLatLngs = (lls: any, currentWorldOffsetVal: number): LatLngExpression[] => {
+    const parseAndWrapLatLngs = (lls: { lat: number; lng: number }[] | number[][], currentWorldOffsetVal: number): LatLngExpression[] => {
         const parsed: LatLngExpression[] = [];
         if (Array.isArray(lls) && lls.length > 0) {
             if (lls[0] && typeof lls[0].lat === 'number' && typeof lls[0].lng === 'number') {
@@ -382,7 +386,7 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
             }
         }
         return parsed.length >= 3 ? parsed : [];
-      };
+    };
 
     if (Array.isArray(latlngsFromLayer) && latlngsFromLayer.length > 0) {
         if (latlngsFromLayer[0] && typeof (latlngsFromLayer[0] as any).lat === 'number') {

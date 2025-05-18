@@ -10,6 +10,7 @@ import './HomePage.css'; // Pastikan ada
 import styles from './EditForm.module.css'; // Pastikan ada
 import type { LatLngExpression } from 'leaflet';
 import * as turf from '@turf/turf';
+import type { Feature, Polygon } from 'geojson';
 
 // Helper functions dan konstanta skala
 function generateUniqueId(): string {
@@ -152,7 +153,7 @@ export default function HomePage() {
     const MAP_BOUNDS_Y_MAX = MAP_CRS_HEIGHT_UNITS; const MAP_BOUNDS_X_MAX = MAP_CRS_WIDTH_UNITS;
     const POLYGON_SIZE_MIN = 80; const POLYGON_SIZE_MAX = 250; const MAX_GENERATION_ATTEMPTS = 20;
     let newPolygonVerticesLeaflet: LatLngExpression[] = [];
-    let generatedPolygonGeoJSON: any = null;
+    let generatedPolygonGeoJSON: ReturnType<typeof turf.polygon> | null = null;
     let attempt = 0; let isOverlapping = true;
 
     while (isOverlapping && attempt < MAX_GENERATION_ATTEMPTS) {
@@ -225,7 +226,6 @@ export default function HomePage() {
 
   const handleDeleteKingdom = (kingdomIdToDelete: string) => {
     if (isEditingDetails || isEditingTerritory) { alert("Please finish or cancel editing."); return; }
-    const { id, territoryPolygons, color, ...kingdomData } = kingdoms.find(k => k.id === kingdomIdToDelete) || {};
     setKingdoms(kingdoms.filter(k => k.id !== kingdomIdToDelete));
     setSelectedKingdom(null);
     setSelectedMapFeature(null);
@@ -236,7 +236,7 @@ export default function HomePage() {
     const kingdomToEdit = kingdoms.find(k => k.id === kingdomId);
     if (kingdomToEdit) {
       setEditingKingdomId(kingdomId);
-      const { id, territoryPolygons, color, ...editableFields } = kingdomToEdit;
+      const { id: _, territoryPolygons: __, color: ___, ...editableFields } = kingdomToEdit;
       setEditFormData(editableFields);
       setIsEditingDetails(true); setIsEditingTerritory(false);
       setSelectedKingdom(kingdomToEdit); setKingdomToFocus(kingdomId);
