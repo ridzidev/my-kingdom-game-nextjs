@@ -94,23 +94,39 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !L) {
-      Promise.all([
-        import('leaflet'),
-        import('leaflet-editable')
-      ]).then(([leafletModule, editableModule]) => {
-        L = leafletModule.default;
-        Editable = editableModule.default;
-        if (!L) {
-          console.error("Leaflet failed to load.");
-          return;
+      const loadLibraries = async () => {
+        try {
+          const [leafletModule, editableModule] = await Promise.all([
+            import('leaflet'),
+            import('leaflet-editable')
+          ]);
+          
+          L = leafletModule.default;
+          Editable = editableModule.default;
+          
+          if (!L) {
+            console.error("Leaflet failed to load.");
+            return;
+          }
+
+          // Initialize the editable plugin
+          if (Editable) {
+            const MapClass = L.Map as unknown as { prototype: { initialize: Function } };
+            const originalInitHook = MapClass.prototype.initialize;
+            MapClass.prototype.initialize = function(this: EditableMap, ...args: unknown[]) {
+              const result = originalInitHook.apply(this, args);
+              (this as EditableMap).editTools = new Editable(this);
+              return result;
+            };
+          }
+          
+          setLibrariesLoaded(true);
+        } catch (error) {
+          console.error("Failed to load Leaflet libraries:", error);
         }
-        if (Editable) {
-          L.Map.addInitHook(function(this: EditableMap) {
-            this.editTools = new Editable(this);
-          });
-        }
-        setLibrariesLoaded(true);
-      }).catch(error => console.error("Failed to load Leaflet libraries:", error));
+      };
+
+      loadLibraries();
     } else if (L) {
       setLibrariesLoaded(true);
     }
