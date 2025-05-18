@@ -238,7 +238,7 @@ export default function HomePage() {
     const kingdomToEdit = kingdoms.find(k => k.id === kingdomId);
     if (kingdomToEdit) {
       setEditingKingdomId(kingdomId);
-      const { id, territoryPolygons, color, ...editableFields } = kingdomToEdit;
+      const { id: _, territoryPolygons: __, color: ___, ...editableFields } = kingdomToEdit;
       setEditFormData(editableFields);
       setIsEditingDetails(true); setIsEditingTerritory(false);
       setSelectedKingdom(kingdomToEdit); setKingdomToFocus(kingdomId);
