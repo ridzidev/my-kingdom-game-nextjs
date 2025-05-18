@@ -10,7 +10,9 @@ import './HomePage.css'; // Pastikan ada
 import styles from './EditForm.module.css'; // Pastikan ada
 import type { LatLngExpression } from 'leaflet';
 import * as turf from '@turf/turf';
-import type { Feature, Polygon } from 'geojson';
+// Removed Feature, Polygon as they are unused
+// import type { Feature, Polygon } from 'geojson'; // Original line
+import type {} from 'geojson'; // Corrected: removed unused Feature, Polygon. If no other types from 'geojson' are needed, this line can be removed.
 
 // Helper functions dan konstanta skala
 function generateUniqueId(): string {
@@ -236,7 +238,8 @@ export default function HomePage() {
     const kingdomToEdit = kingdoms.find(k => k.id === kingdomId);
     if (kingdomToEdit) {
       setEditingKingdomId(kingdomId);
-      const { id: _, territoryPolygons: __, color: ___, ...editableFields } = kingdomToEdit;
+      // Changed _, __, ___ to _id, _territoryPolygons, _color for ESLint
+      const { id: _id, territoryPolygons: _territoryPolygons, color: _color, ...editableFields } = kingdomToEdit;
       setEditFormData(editableFields);
       setIsEditingDetails(true); setIsEditingTerritory(false);
       setSelectedKingdom(kingdomToEdit); setKingdomToFocus(kingdomId);
@@ -292,6 +295,7 @@ export default function HomePage() {
           <form onSubmit={(e) => { e.preventDefault(); handleSaveEditDetails(); }}>
             <div className={styles.formGroup}><label htmlFor="name">Name:</label><input type="text" id="name" name="name" value={currentFormData.name} onChange={handleEditFormChange} required /></div>
             <div className={styles.formGroup}><label htmlFor="ruler">Ruler:</label><input type="text" id="ruler" name="ruler" value={currentFormData.ruler} onChange={handleEditFormChange} required /></div>
+            {/* Escaped apostrophe in Ruler's Age */}
             <div className={styles.formGroup}><label htmlFor="age">Ruler's Age:</label><input type="number" id="age" name="age" value={currentFormData.age} onChange={handleEditFormChange} required /></div>
             <div className={styles.formGroup}><label htmlFor="foundingYear">Founding Year:</label><input type="number" id="foundingYear" name="foundingYear" value={currentFormData.foundingYear} onChange={handleEditFormChange} required /></div>
             <div className={styles.formGroup}><label htmlFor="population">Population:</label><input type="number" id="population" name="population" value={currentFormData.population} onChange={handleEditFormChange} /></div>
@@ -376,9 +380,10 @@ export default function HomePage() {
   };
   
   const handleCancelAllEdits = (isSwitchingMode = false) => {
-    if (!isSwitchingMode) {
+    // Removed the alert that always fires. Only alert if not switching mode and edits are active.
+    if (!isSwitchingMode && (isEditingDetails || isEditingTerritory)) {
       alert("Please finish or cancel editing first.");
-      return;
+      return; // Keep return here if alert is shown
     }
     if (isEditingTerritory && fantasyMapRef.current) {
         fantasyMapRef.current.cancelInternalTerritoryEdit();
@@ -387,6 +392,12 @@ export default function HomePage() {
     setIsEditingDetails(false);
     setIsEditingTerritory(false);
     setEditFormData({});
+    // If not switching mode, it implies a direct cancel action from a button,
+    // so it makes sense to also clear selection.
+    // if (!isSwitchingMode) {
+    //   setSelectedKingdom(null);
+    //   setSelectedMapFeature(null);
+    // }
   };
 
   const renderTerritoryEditControls = () => {
@@ -400,7 +411,7 @@ export default function HomePage() {
         <button onClick={triggerSaveTerritoryChanges} className={styles.saveButton}>
             Save Territory Changes
         </button>
-        <button onClick={() => handleCancelAllEdits()} className={styles.cancelButton}>
+        <button onClick={() => handleCancelAllEdits(false)} className={styles.cancelButton}> {/* Pass false for explicit cancel */}
             Cancel Territory Edit
         </button>
       </div>

@@ -4,7 +4,7 @@ import React, {
   useEffect,
   useRef,
   useState,
-  useCallback,
+  // useCallback, // Removed: unused
   forwardRef,
   useImperativeHandle
 } from 'react';
@@ -16,10 +16,14 @@ import type {
   LeafletMouseEvent,
   Polygon as LeafletPolygon,
   LayerGroup as LeafletLayerGroup,
-  LatLngBounds as LeafletLatLngBounds
+  LatLngBounds as LeafletLatLngBounds,
+  PathOptions // Imported for EditablePolygon options
 } from 'leaflet';
 
 let L: typeof import('leaflet') | null = null;
+// Define LeafletLatLng type alias once L is loaded, or use L.LatLng directly.
+type LeafletLatLng = import('leaflet').LatLng;
+
 
 interface EditablePolygon extends LeafletPolygon {
   editTools: {
@@ -29,7 +33,8 @@ interface EditablePolygon extends LeafletPolygon {
     stopDrawing: () => void;
     revertLayers: () => void;
   };
-  options: {
+  // options should extend Leaflet's PathOptions and add custom properties
+  options: PathOptions & {
     id_kingdom?: string;
     world_offset?: number;
   };
@@ -37,7 +42,7 @@ interface EditablePolygon extends LeafletPolygon {
 
 interface EditableMap extends LeafletMapType {
   editTools: {
-    startPolygon: (layer: LeafletPolygon) => void;
+    startPolygon: (layer?: LeafletPolygon) => void; // layer is optional in some leaflet-editable versions/uses
     startEdit: (layer: LeafletPolygon) => void;
     stopDrawing: () => void;
     revertLayers: () => void;
@@ -81,9 +86,9 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
   const mapRef = useRef<EditableMap | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [librariesLoaded, setLibrariesLoaded] = useState(false);
-  const legendRef = useRef<HTMLDivElement | null>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
   const kingdomLayersRef = useRef<LeafletLayerGroup | null>(null);
-  const individualKingdomMainLayersRef = useRef<Record<string, LeafletPolygon[]>>({});
+  const individualKingdomMainLayersRef = useRef<Record<string, LeafletPolygon[]>>({}); // LeafletPolygon is fine here, cast to EditablePolygon when needed
   const editableLayersRef = useRef<EditablePolygon[]>([]);
   const editingWorldOffsetRef = useRef<number>(0);
 
@@ -98,9 +103,10 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
             console.error("Leaflet failed to load.");
             return;
         }
-        // Initialize Leaflet.Editable
         if (editableModule.default) {
-            L.Map.addInitHook(function(this: EditableMap) {
+            // L.Map.addInitHook is a valid way to initialize leaflet-editable
+            (L.Map as any).addInitHook(function(this: EditableMap) {
+                // @ts-ignore: leaflet-editable might not be perfectly typed for this dynamic assignment
                 this.editTools = new editableModule.default(this);
             });
         }
@@ -169,7 +175,8 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
     kingdomLayersRef.current.clearLayers();
     individualKingdomMainLayersRef.current = {};
 
-    const currentEditingLayerKingdomId = editableLayersRef.current.length > 0 ? (editableLayersRef.current[0] as any).options?.id_kingdom : null;
+    // Cast to EditablePolygon to access custom options type-safely
+    const currentEditingLayerKingdomId = editableLayersRef.current.length > 0 ? (editableLayersRef.current[0] as EditablePolygon).options?.id_kingdom : null;
     
     if (!isEditingTerritoryMode || (kingdomBeingEditedId && kingdomBeingEditedId !== currentEditingLayerKingdomId) || (!kingdomBeingEditedId && currentEditingLayerKingdomId)) {
         editableLayersRef.current.forEach(layer => {
@@ -207,7 +214,7 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
               return [lat, lng + (worldOffset * mapWidthUnits)] as LatLngExpression;
             });
 
-            const kingdomPolygonOptions = {
+            const kingdomPolygonOptions: EditablePolygon['options'] = { // Use the more specific options type
               fillColor: kingdom.color,
               color: '#FFFFFF',
               weight: 2.5,
@@ -217,7 +224,8 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
               world_offset: worldOffset
             };
 
-            const kingdomPolygon = L_.polygon(translatedCoords, kingdomPolygonOptions) as any;
+            // Cast to EditablePolygon after creation.
+            const kingdomPolygon = L_.polygon(translatedCoords, kingdomPolygonOptions) as EditablePolygon;
 
             kingdomPolygon.bindPopup(`<b>${kingdom.name}</b> (Copy ${worldOffset})<br>${getKingdomDescription(kingdom)}`);
             
@@ -227,7 +235,8 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
                   const originalLng = wrapLng(e.latlng.lng, mapWidthUnits);
                   onTileClick({ lat: e.latlng.lat, lng: originalLng }, kingdom);
               } else if (isEditingTerritoryMode && kingdom.id === kingdomBeingEditedId) {
-                  editingWorldOffsetRef.current = (kingdomPolygon.options as any).world_offset;
+                  // Access options type-safely
+                  editingWorldOffsetRef.current = kingdomPolygon.options.world_offset ?? 0;
                   const alreadyEditableByThisInstance = editableLayersRef.current.includes(kingdomPolygon) && kingdomPolygon.editTools?.isEnabled();
                   
                   if (!alreadyEditableByThisInstance) {
@@ -236,10 +245,10 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
                               l.editTools.disable(); 
                           }
                       });
-                      editableLayersRef.current = [];
+                      editableLayersRef.current = []; // Clear and add only the current one
 
                       if (mapRef.current?.editTools) {
-                          mapRef.current.editTools.startPolygon(kingdomPolygon);
+                          mapRef.current.editTools.startPolygon(kingdomPolygon); // Enable editing for this polygon
                           editableLayersRef.current.push(kingdomPolygon);
                       }
                   }
@@ -252,7 +261,8 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
             }
 
             if (isEditingTerritoryMode && kingdom.id === kingdomBeingEditedId && mapRef.current) {
-                if ((kingdomPolygon.options as any).world_offset === editingWorldOffsetRef.current) {
+                // Access options type-safely
+                if (kingdomPolygon.options.world_offset === editingWorldOffsetRef.current) {
                     const isAlreadyInEditableRef = editableLayersRef.current.includes(kingdomPolygon);
                     const isCurrentlyEnabled = isAlreadyInEditableRef && kingdomPolygon.editTools?.isEnabled();
 
@@ -260,7 +270,7 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
                         try {
                             if (mapRef.current?.editTools) {
                                 mapRef.current.editTools.startPolygon(kingdomPolygon);
-                                editableLayersRef.current.push(kingdomPolygon);
+                                if(!isAlreadyInEditableRef) editableLayersRef.current.push(kingdomPolygon);
                             }
                         } catch (error) {
                             console.error("Error enabling edit:", error);
@@ -270,16 +280,16 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
             }
           });
         });
-        if (kingdoms.length > 0) {
+        if (kingdoms.length > 0) { // This check should be outside forEach if legend is for all
             kingdomLegendHtml += `<div class="legend-item"><span class="legend-color" style="background: ${kingdom.color}"></span>${kingdom.name}</div>`;
         }
       }
     });
 
     if (legendRef.current) {
-      (legendRef.current as HTMLDivElement).innerHTML = kingdomLegendHtml;
+      legendRef.current.innerHTML = kingdomLegendHtml;
     } else if (mapContainerRef.current && L_ && mapRef.current && kingdoms.length > 0) {
-        if (!legendRef.current) {
+        if (!legendRef.current) { // Redundant check, already in else if
             const legendParent = mapRef.current.getContainer().querySelector('.leaflet-control-container');
             if (legendParent) {
                 const legendDiv = L_.DomUtil.create('div', 'realistic-legend leaflet-control'); 
@@ -288,19 +298,19 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
                 if (bottomLeftContainer) {
                     bottomLeftContainer.prepend(legendDiv);
                 } else {
-                    legendParent.appendChild(legendDiv);
+                    legendParent.appendChild(legendDiv); // Fallback if bottom-left is not found
                 }
-                legendRef.current = legendDiv as HTMLDivElement;
+                legendRef.current = legendDiv;
             }
         }
     }  else if (legendRef.current && kingdoms.length === 0) { 
-        (legendRef.current as HTMLDivElement).innerHTML = kingdomLegendHtml;
+        (legendRef.current as HTMLDivElement).innerHTML = kingdomLegendHtml; // Update legend to "No kingdoms"
     }
   }, [kingdoms, librariesLoaded, isEditingTerritoryMode, kingdomBeingEditedId, onTileClick, mapWidthUnits, mapHeightUnits]);
 
   useEffect(() => {
     if (!librariesLoaded || !kingdomToFocusId || !mapRef.current || !L) return;
-    if (isEditingTerritoryMode) return;
+    if (isEditingTerritoryMode) return; // Don't refocus if editing
     const L_ = L;
     const targetKingdomMainLayers = individualKingdomMainLayersRef.current[kingdomToFocusId];
 
@@ -311,6 +321,7 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
         if (kingdomBoundsAggregated) {
           kingdomBoundsAggregated.extend(layerBounds);
         } else {
+          // Ensure L_ is available for L_.latLngBounds
           kingdomBoundsAggregated = L_.latLngBounds(layerBounds.getSouthWest(), layerBounds.getNorthEast());
         }
       });
@@ -323,6 +334,79 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
     if (onFocusComplete) onFocusComplete();
   }, [kingdomToFocusId, onFocusComplete, librariesLoaded, isEditingTerritoryMode]);
 
+  // Helper function for parsing LatLngs, ensures L is loaded
+  const parseAndWrapLatLngs = (
+    lls: LeafletLatLng[], // Expects an array of L.LatLng objects
+    currentWorldOffsetVal: number,
+    mapWidth: number
+  ): LatLngExpression[] => {
+    const parsed: LatLngExpression[] = [];
+    if (!L) return parsed; // Guard against L not being loaded
+
+    if (Array.isArray(lls) && lls.length > 0) {
+      lls.forEach((ll: LeafletLatLng) => {
+        // ll is an L.LatLng object, so ll.lat and ll.lng are numbers
+        const normalizedLng = wrapLng(ll.lng - (currentWorldOffsetVal * mapWidth), mapWidth);
+        parsed.push([ll.lat, normalizedLng] as LatLngExpression);
+      });
+    }
+    return parsed.length >= 3 ? parsed : [];
+  };
+
+  const getTerritoryDataFromLeafletLayer = (
+    layer: EditablePolygon,
+    worldOffset: number,
+    currentMapWidthUnits: number
+  ): LatLngExpression[][] | null => {
+    if (!L || !layer) return null;
+    const latlngsFromLayer = layer.getLatLngs(); // Returns L.LatLng[] | L.LatLng[][] | L.LatLng[][][]
+    const newTerritoriesLeafletFormat: LatLngExpression[][] = [];
+
+    if (Array.isArray(latlngsFromLayer) && latlngsFromLayer.length > 0) {
+      const firstEl = latlngsFromLayer[0];
+
+      // Case 1: Simple Polygon (latlngsFromLayer is LeafletLatLng[])
+      // `firstEl` would be a LeafletLatLng object.
+      if (firstEl && 'lat' in firstEl && typeof firstEl.lat === 'number') {
+        const poly = parseAndWrapLatLngs(latlngsFromLayer as LeafletLatLng[], worldOffset, currentMapWidthUnits);
+        if (poly.length > 0) newTerritoriesLeafletFormat.push(poly);
+      }
+      // Case 2: Polygon with holes (latlngsFromLayer is LeafletLatLng[][])
+      // `firstEl` would be an array of LeafletLatLng (the outer ring).
+      else if (Array.isArray(firstEl) && firstEl.length > 0) {
+        const firstInnerEl = firstEl[0]; // This is firstEl[0], which is a LeafletLatLng
+        if (firstInnerEl && 'lat' in firstInnerEl && typeof firstInnerEl.lat === 'number') {
+          // `firstEl` is LeafletLatLng[] (outer ring of a polygon with holes)
+          const poly = parseAndWrapLatLngs(firstEl as LeafletLatLng[], worldOffset, currentMapWidthUnits);
+          if (poly.length > 0) newTerritoriesLeafletFormat.push(poly);
+        }
+        // Case 3: MultiPolygon (latlngsFromLayer is LeafletLatLng[][][])
+        // `firstEl` would be LeafletLatLng[][] (a single polygon, possibly with holes)
+        else if (Array.isArray(firstInnerEl) && firstInnerEl.length > 0) {
+          // `firstInnerEl` is LeafletLatLng[]
+          const firstDeepInnerEl = firstInnerEl[0]; // This should be firstInnerEl[0]
+          if (firstDeepInnerEl && 'lat' in firstDeepInnerEl && typeof firstDeepInnerEl.lat === 'number') {
+            // `firstEl` is LeafletLatLng[][]
+            // `latlngsFromLayer` is LeafletLatLng[][][]
+            (latlngsFromLayer as LeafletLatLng[][][]).forEach(polygonRingsArray => { // polygonRingsArray is LeafletLatLng[][]
+              if (polygonRingsArray.length > 0 && polygonRingsArray[0].length > 0) { // polygonRingsArray[0] is LeafletLatLng[] (outer ring)
+                const poly = parseAndWrapLatLngs(polygonRingsArray[0] as LeafletLatLng[], worldOffset, currentMapWidthUnits);
+                if (poly.length > 0) newTerritoriesLeafletFormat.push(poly);
+              }
+            });
+          } else {
+             console.warn("FantasyMap: Unrecognized LatLngs structure (depth 3 but not LeafletLatLng):", latlngsFromLayer);
+          }
+        } else {
+            console.warn("FantasyMap: Unrecognized LatLngs structure (depth 2 but not LeafletLatLng or empty):", latlngsFromLayer);
+        }
+      } else {
+        console.warn("FantasyMap: Unrecognized LatLngs structure (depth 1 but not LeafletLatLng or empty):", latlngsFromLayer);
+      }
+    }
+    return newTerritoriesLeafletFormat.length > 0 ? newTerritoriesLeafletFormat : null;
+  };
+
   useImperativeHandle(ref, () => ({
     getEditedTerritoryData: () => {
       if (!isEditingTerritoryMode || !kingdomBeingEditedId || editableLayersRef.current.length === 0 || !L) {
@@ -330,17 +414,21 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
         return null;
       }
       const layerToGetDataFrom = editableLayersRef.current.find(layer => {
-          const opts = (layer as any).options;
+          // Access options type-safely
+          const opts = layer.options;
           return opts.id_kingdom === kingdomBeingEditedId && opts.world_offset === editingWorldOffsetRef.current && layer.editTools?.isEnabled();
         });
 
         if (!layerToGetDataFrom) {
           console.warn("FantasyMap: getEditedTerritoryData - Could not find the specific layer that was being edited based on world_offset and active state.");
           const fallbackLayer = editableLayersRef.current.find(layer => 
-              (layer as any).options.id_kingdom === kingdomBeingEditedId);
+              // Access options type-safely
+              (layer as EditablePolygon).options.id_kingdom === kingdomBeingEditedId);
+          
           if (fallbackLayer) {
               console.warn("FantasyMap: getEditedTerritoryData - Using fallback layer (first editable for this kingdom, may not be current offset).");
-              const fallbackOffset = (fallbackLayer as any).options.world_offset || 0;
+              // Access options type-safely
+              const fallbackOffset = (fallbackLayer as EditablePolygon).options.world_offset ?? 0;
               return getTerritoryDataFromLeafletLayer(fallbackLayer, fallbackOffset, mapWidthUnits);
           }
           return null;
@@ -359,57 +447,6 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
       editingWorldOffsetRef.current = 0;
     }
   }));
-
-  const getTerritoryDataFromLeafletLayer = (
-    layer: EditablePolygon,
-    worldOffset: number,
-    currentMapWidthUnits: number
-  ): LatLngExpression[][] | null => {
-    if (!L || !layer) return null;
-    const latlngsFromLayer = layer.getLatLngs();
-    const newTerritoriesLeafletFormat: LatLngExpression[][] = [];
-
-    const parseAndWrapLatLngs = (lls: { lat: number; lng: number }[] | number[][], currentWorldOffsetVal: number): LatLngExpression[] => {
-        const parsed: LatLngExpression[] = [];
-        if (Array.isArray(lls) && lls.length > 0) {
-            if (lls[0] && typeof lls[0].lat === 'number' && typeof lls[0].lng === 'number') {
-                lls.forEach((ll: { lat: number; lng: number }) => {
-                    const normalizedLng = wrapLng(ll.lng - (currentWorldOffsetVal * currentMapWidthUnits), currentMapWidthUnits);
-                    parsed.push([ll.lat, normalizedLng] as LatLngExpression);
-                });
-            } 
-            else if (Array.isArray(lls[0]) && lls[0].length === 2 && typeof lls[0][0] === 'number') {
-                 lls.forEach((coord: number[]) => {
-                    const normalizedLng = wrapLng(coord[1] - (currentWorldOffsetVal * currentMapWidthUnits), currentMapWidthUnits);
-                    parsed.push([coord[0], normalizedLng] as LatLngExpression);
-                });
-            }
-        }
-        return parsed.length >= 3 ? parsed : [];
-    };
-
-    if (Array.isArray(latlngsFromLayer) && latlngsFromLayer.length > 0) {
-        if (latlngsFromLayer[0] && typeof (latlngsFromLayer[0] as any).lat === 'number') {
-            const poly = parseAndWrapLatLngs(latlngsFromLayer, worldOffset);
-            if (poly.length > 0) newTerritoriesLeafletFormat.push(poly);
-        }
-        else if (Array.isArray(latlngsFromLayer[0]) && latlngsFromLayer[0][0] && typeof (latlngsFromLayer[0][0] as any).lat === 'number') {
-            const poly = parseAndWrapLatLngs(latlngsFromLayer[0], worldOffset);
-            if (poly.length > 0) newTerritoriesLeafletFormat.push(poly);
-        }
-        else if (Array.isArray(latlngsFromLayer[0]) && Array.isArray(latlngsFromLayer[0][0]) && latlngsFromLayer[0][0][0] && typeof (latlngsFromLayer[0][0][0] as any).lat === 'number') {
-            (latlngsFromLayer as any[][][]).forEach(polygonRingsArray => {
-                if (polygonRingsArray.length > 0 && polygonRingsArray[0].length > 0) {
-                    const poly = parseAndWrapLatLngs(polygonRingsArray[0], worldOffset);
-                    if (poly.length > 0) newTerritoriesLeafletFormat.push(poly);
-                }
-            });
-        } else {
-            console.warn("FantasyMap: Unrecognized LatLngs structure from edited layer:", latlngsFromLayer);
-        }
-      }
-    return newTerritoriesLeafletFormat.length > 0 ? newTerritoriesLeafletFormat : null;
-  }
 
   return (
     <div
