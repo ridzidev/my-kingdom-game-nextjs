@@ -21,6 +21,7 @@ import type {
 } from 'leaflet';
 
 let L: typeof import('leaflet') | null = null;
+let Editable: any = null;
 // Define LeafletLatLng type alias once L is loaded, or use L.LatLng directly.
 type LeafletLatLng = import('leaflet').LatLng;
 
@@ -98,16 +99,15 @@ const FantasyMap = forwardRef<FantasyMapHandle, FantasyMapProps>(({
         import('leaflet-editable')
       ]).then(([leafletModule, editableModule]) => {
         L = leafletModule.default;
+        Editable = editableModule.default;
         if (!L) {
-            console.error("Leaflet failed to load.");
-            return;
+          console.error("Leaflet failed to load.");
+          return;
         }
-        if (editableModule.default) {
-            // L.Map.addInitHook is a valid way to initialize leaflet-editable
-            (L.Map as { addInitHook: (hook: (this: EditableMap) => void) => void }).addInitHook(function(this: EditableMap) {
-                // @ts-expect-error: leaflet-editable might not be perfectly typed for this dynamic assignment
-                this.editTools = new editableModule.default(this);
-            });
+        if (Editable) {
+          L.Map.addInitHook(function(this: EditableMap) {
+            this.editTools = new Editable(this);
+          });
         }
         setLibrariesLoaded(true);
       }).catch(error => console.error("Failed to load Leaflet libraries:", error));
