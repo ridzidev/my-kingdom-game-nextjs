@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="1000" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with fantasy texture -->
+  <defs>
+    <pattern id="fantasyTexture" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M0 0h100v100H0z" fill="#1a1a1a" opacity="0.1"/>
+      <path d="M0 0l100 100M100 0L0 100" stroke="#2a2a2a" stroke-width="0.5" opacity="0.1"/>
+    </pattern>
+  </defs>
+  
+  <!-- Base layer -->
+  <rect width="1000" height="1000" fill="url(#fantasyTexture)"/>
+  
+  <!-- Fantasy elements -->
+  <g opacity="0.3">
+    <!-- Mountains -->
+    <path d="M100,800 L200,600 L300,800" fill="#4a4a4a"/>
+    <path d="M400,700 L500,500 L600,700" fill="#4a4a4a"/>
+    <path d="M700,750 L800,550 L900,750" fill="#4a4a4a"/>
+    
+    <!-- Forests -->
+    <circle cx="150" cy="400" r="50" fill="#2d4a2d"/>
+    <circle cx="350" cy="300" r="40" fill="#2d4a2d"/>
+    <circle cx="650" cy="350" r="45" fill="#2d4a2d"/>
+    <circle cx="850" cy="250" r="55" fill="#2d4a2d"/>
+    
+    <!-- Rivers -->
+    <path d="M0,200 Q250,150 500,200 T1000,150" stroke="#2a4a6a" stroke-width="10" fill="none"/>
+    <path d="M0,400 Q250,350 500,400 T1000,350" stroke="#2a4a6a" stroke-width="8" fill="none"/>
+    
+    <!-- Roads -->
+    <path d="M100,100 L900,900" stroke="#4a4a4a" stroke-width="5" stroke-dasharray="20,10"/>
+    <path d="M100,900 L900,100" stroke="#4a4a4a" stroke-width="5" stroke-dasharray="20,10"/>
+  </g>
+  
+  <!-- Grid lines -->
+  <g stroke="#3a3a3a" stroke-width="0.5" opacity="0.2">
+    {Array.from({length: 10}, (_, i) => (
+      <line key={`h${i}`} x1="0" y1={i * 100} x2="1000" y2={i * 100}/>
+    ))}
+    {Array.from({length: 10}, (_, i) => (
+      <line key={`v${i}`} x1={i * 100} y1="0" x2={i * 100} y2="1000"/>
+    ))}
+  </g>
+</svg> 

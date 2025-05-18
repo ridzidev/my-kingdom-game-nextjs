@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+    </linearGradient>
+    
+    <pattern id="stars" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="1" fill="white" opacity="0.8"/>
+      <circle cx="30" cy="30" r="1.5" fill="white" opacity="0.6"/>
+      <circle cx="50" cy="20" r="1" fill="white" opacity="0.7"/>
+      <circle cx="70" cy="40" r="1.2" fill="white" opacity="0.5"/>
+      <circle cx="90" cy="10" r="1" fill="white" opacity="0.9"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#skyGradient)"/>
+  
+  <!-- Stars -->
+  <rect width="100%" height="100%" fill="url(#stars)" opacity="0.3"/>
+  
+  <!-- Mountains -->
+  <path d="M0,800 L200,600 L400,700 L600,500 L800,650 L1000,550 L1200,700 L1400,600 L1600,750 L1800,650 L1920,800 Z" 
+        fill="#2c3e50" opacity="0.3"/>
+  
+  <!-- Clouds -->
+  <g opacity="0.2">
+    <path d="M100,200 Q150,150 200,200 T300,200" stroke="white" stroke-width="20" fill="none"/>
+    <path d="M400,150 Q450,100 500,150 T600,150" stroke="white" stroke-width="15" fill="none"/>
+    <path d="M700,250 Q750,200 800,250 T900,250" stroke="white" stroke-width="25" fill="none"/>
+    <path d="M1000,180 Q1050,130 1100,180 T1200,180" stroke="white" stroke-width="20" fill="none"/>
+    <path d="M1300,220 Q1350,170 1400,220 T1500,220" stroke="white" stroke-width="15" fill="none"/>
+  </g>
+  
+  <!-- Magic particles -->
+  <g opacity="0.1">
+    <circle cx="200" cy="300" r="2" fill="#e74c3c"/>
+    <circle cx="400" cy="250" r="1.5" fill="#3498db"/>
+    <circle cx="600" cy="350" r="2" fill="#2ecc71"/>
+    <circle cx="800" cy="200" r="1.5" fill="#f1c40f"/>
+    <circle cx="1000" cy="300" r="2" fill="#9b59b6"/>
+    <circle cx="1200" cy="250" r="1.5" fill="#e67e22"/>
+    <circle cx="1400" cy="350" r="2" fill="#1abc9c"/>
+    <circle cx="1600" cy="200" r="1.5" fill="#d35400"/>
+  </g>
+</svg> 

@@ -1,0 +1,149 @@
+/* src/app/EditForm.module.css */
+.editFormOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100; /* Di atas map dan info panel */
+  }
+  
+  .editFormContainer {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .editFormContainer h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+  }
+  
+  .formGroup {
+    margin-bottom: 15px;
+  }
+  
+  .formGroup label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .formGroup input[type="text"],
+  .formGroup input[type="number"],
+  .formGroup textarea {
+    width: calc(100% - 20px); /* Kurangi padding */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .formGroup textarea {
+    resize: vertical;
+    min-height: 60px;
+  }
+  
+  .formActions {
+    margin-top: 25px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  .saveButton,
+  .cancelButton {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+  }
+  
+  .saveButton {
+    background-color: #28a745; /* Green */
+    color: white;
+  }
+  
+  .saveButton:hover {
+    background-color: #218838;
+  }
+  
+  .cancelButton {
+    background-color: #6c757d; /* Gray */
+    color: white;
+  }
+  
+  .cancelButton:hover {
+    background-color: #5a6268;
+  }
+  
+  /* Class untuk "mengaburkan" game-container saat form aktif */
+  .editingActive {
+    filter: blur(3px);
+    pointer-events: none; /* Mencegah interaksi dengan map/info saat form aktif */
+  }
+
+  /* src/app/EditForm.module.css atau HomePage.css */
+.gameTimeDisplay {
+    text-align: center;
+    margin: 10px 0 15px 0;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #2c3e50;
+    padding: 8px;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+  }
+  
+  .statusMessage {
+    text-align: center;
+    margin: 5px 0;
+  }
+  
+  .editingMessage {
+    font-weight: bold;
+    padding: 5px;
+    border-radius: 3px;
+    display: inline-block; /* Agar background tidak full width */
+  }
+  /* Ganti warna di HomePage.tsx jika mau */
+  /* Misal: editingDetails -> orange, editingTerritory -> deepskyblue */
+  
+  .actionButton { /* Untuk tombol Generate */
+    display: block;
+    margin: 10px auto;
+    padding: 10px 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  .actionButton:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+  }
+  
+  /* Styling untuk tombol Save/Cancel Territory di HomePage */
+  .saveButton, .cancelButton { /* Ini sudah ada untuk form edit detail, kita bisa reuse */
+    padding: 10px 18px !important; /* Paksa override jika ada konflik */
+    font-size: 1rem !important;
+    font-weight: bold !important;
+  }
+  
+  /* ... (sisa styling EditForm.module.css) ... */
